@@ -93,13 +93,13 @@ function PosContent() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
       <section>
-        <div className="mb-4 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+        <div className="glass mb-4 flex items-center gap-2 rounded-xl px-3 py-2.5">
           <Search size={16} className="text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar produto..."
-            className="w-full bg-transparent text-sm outline-none"
+            className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
           />
         </div>
 
@@ -107,8 +107,8 @@ function PosContent() {
           <div
             className={`mb-4 rounded-lg px-3 py-2 text-sm ${
               message.type === 'error'
-                ? 'bg-red-50 text-red-600'
-                : 'bg-green-50 text-green-600'
+                ? 'bg-red-500/10 text-red-300'
+                : 'bg-emerald-500/10 text-emerald-300'
             }`}
           >
             {message.text}
@@ -124,9 +124,9 @@ function PosContent() {
                 key={product.id}
                 onClick={() => handleAdd(product)}
                 disabled={out}
-                className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition hover:shadow-md disabled:opacity-50"
+                className="glass card-hover group flex flex-col overflow-hidden rounded-xl text-left disabled:opacity-50"
               >
-                <div className="relative aspect-square w-full overflow-hidden bg-slate-100">
+                <div className="relative aspect-square w-full overflow-hidden bg-white/5">
                   {product.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -135,7 +135,7 @@ function PosContent() {
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-slate-300">
+                    <div className="flex h-full w-full items-center justify-center text-slate-600">
                       <ShoppingCart size={28} />
                     </div>
                   )}
@@ -146,55 +146,55 @@ function PosContent() {
                   )}
                 </div>
                 <div className="p-2.5">
-                  <p className="truncate text-sm font-medium text-slate-800">{product.name}</p>
+                  <p className="truncate text-sm font-medium text-slate-200">{product.name}</p>
                   <div className="mt-0.5 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-900">
+                    <span className="grad-text text-sm font-semibold">
                       R$ {product.price.toFixed(2)}
                     </span>
-                    <span className="text-xs text-slate-400">{product.stockQuantity} un.</span>
+                    <span className="text-xs text-slate-500">{product.stockQuantity} un.</span>
                   </div>
                 </div>
               </button>
             );
           })}
           {filtered.length === 0 && (
-            <p className="col-span-full py-12 text-center text-sm text-slate-400">
+            <p className="col-span-full py-12 text-center text-sm text-slate-500">
               Nenhum produto encontrado.
             </p>
           )}
         </div>
       </section>
 
-      <aside className="h-fit rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-20">
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
+      <aside className="glass h-fit rounded-xl p-4 lg:sticky lg:top-24">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-200">
           <ShoppingCart size={16} /> Carrinho
         </h2>
 
         <div className="max-h-[45vh] space-y-2 overflow-y-auto">
           {items.length === 0 && (
-            <p className="py-8 text-center text-sm text-slate-400">Carrinho vazio</p>
+            <p className="py-8 text-center text-sm text-slate-500">Carrinho vazio</p>
           )}
           {items.map((item) => (
             <div
               key={item.product.id}
-              className="flex items-center gap-2 rounded-lg border border-slate-100 p-2"
+              className="flex items-center gap-2 rounded-lg border border-white/10 p-2"
             >
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium text-slate-800">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-slate-200">
                   {item.product.name}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   R$ {item.product.price.toFixed(2)} un.
                 </p>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setQuantity(item.product.id, item.quantity - 1)}
-                  className="rounded p-1 text-slate-500 hover:bg-slate-100"
+                  className="rounded p-1 text-slate-400 hover:bg-white/10"
                 >
                   <Minus size={14} />
                 </button>
-                <span className="w-5 text-center text-sm">{item.quantity}</span>
+                <span className="w-5 text-center text-sm text-slate-200">{item.quantity}</span>
                 <button
                   onClick={() => {
                     if (item.quantity + 1 > item.product.stockQuantity) {
@@ -203,13 +203,13 @@ function PosContent() {
                     }
                     setQuantity(item.product.id, item.quantity + 1);
                   }}
-                  className="rounded p-1 text-slate-500 hover:bg-slate-100"
+                  className="rounded p-1 text-slate-400 hover:bg-white/10"
                 >
                   <Plus size={14} />
                 </button>
                 <button
                   onClick={() => removeItem(item.product.id)}
-                  className="rounded p-1 text-red-400 hover:bg-red-50"
+                  className="rounded p-1 text-red-400 hover:bg-red-500/10"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -218,8 +218,8 @@ function PosContent() {
           ))}
         </div>
 
-        <div className="mt-4 border-t border-slate-100 pt-4">
-          <p className="mb-2 text-xs font-medium text-slate-500">Forma de pagamento</p>
+        <div className="mt-4 border-t border-white/10 pt-4">
+          <p className="mb-2 text-xs font-medium text-slate-400">Forma de pagamento</p>
           <div className="grid grid-cols-2 gap-2">
             {(Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((method) => (
               <button
@@ -227,8 +227,8 @@ function PosContent() {
                 onClick={() => setPaymentMethod(method)}
                 className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
                   paymentMethod === method
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'grad-btn border-transparent text-white'
+                    : 'border-white/10 text-slate-300 hover:bg-white/5'
                 }`}
               >
                 {PAYMENT_LABELS[method]}
@@ -236,15 +236,15 @@ function PosContent() {
             ))}
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-base font-semibold text-slate-900">
-            <span>Total</span>
-            <span>R$ {total().toFixed(2)}</span>
+          <div className="mt-4 flex items-center justify-between text-base font-semibold">
+            <span className="text-slate-200">Total</span>
+            <span className="grad-text">R$ {total().toFixed(2)}</span>
           </div>
 
           <button
             onClick={handleFinalize}
             disabled={items.length === 0 || finalizing}
-            className="mt-3 w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+            className="grad-btn mt-3 w-full rounded-lg py-2.5 text-sm font-medium text-white shadow-lg shadow-violet-900/40 transition disabled:opacity-50"
           >
             {finalizing ? 'Finalizando...' : 'Finalizar Venda'}
           </button>
