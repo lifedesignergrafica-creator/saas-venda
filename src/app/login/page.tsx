@@ -38,7 +38,7 @@ export default function LoginPage() {
         accessToken
       );
 
-      await pullFromDrive(profile.email, profile.name);
+      await pullFromDrive(accessToken, profile.email, profile.name);
 
       localUser = await db.users.where('email').equals(profile.email).first();
       if (!localUser) {
