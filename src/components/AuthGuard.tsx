@@ -28,7 +28,7 @@ export function AuthGuard({
 
   if (!currentUser || !allow.includes(currentUser.role)) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0d17]">
         <Loader2 className="animate-spin text-slate-400" size={24} />
       </div>
     );
