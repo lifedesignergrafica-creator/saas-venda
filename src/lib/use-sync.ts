@@ -15,11 +15,26 @@ export function useSync() {
   const accessToken = useAuthStore((s) => s.accessToken);
 
   const pullFromDrive = useCallback(
-    async (email: string, name: string) => {
-      if (!accessToken) return;
+    // IMPORTANTE: `token` é sempre recebido explicitamente do chamador, e
+    // NUNCA lido daqui de dentro via `accessToken` (o valor do hook). Isso
+    // corrige um bug real de "stale closure" do React: no fluxo de login,
+    // `pullFromDrive` é chamado logo depois de `setSession(...)` salvar o
+    // token no Zustand, mas dentro da MESMA função assíncrona — antes de
+    // qualquer re-render acontecer. Como a referência de `pullFromDrive`
+    // usada ali foi capturada no início da renderização do componente
+    // (quando `accessToken` ainda era `null`), o `accessToken` fechado
+    // nesta closure continuava `null` mesmo depois do login — fazendo o
+    // `if (!accessToken) return;` abortar a sincronização silenciosamente,
+    // sem baixar nem criar nada no Drive. O e-mail do usuário nunca era
+    // cadastrado localmente, e o login sempre terminava com "Seu e-mail
+    // ainda não foi cadastrado por um administrador" — em qualquer conta,
+    // sempre, no primeiro login. Passar o token como argumento elimina essa
+    // dependência de timing.
+    async (token: string, email: string, name: string) => {
+      if (!token) return;
       setStatus('syncing');
       try {
-        const remote = await downloadStoreFile(accessToken);
+        const remote = await downloadStoreFile(token);
         if (remote) {
           await importDbFromJson(remote);
         }
@@ -36,7 +51,7 @@ export function useSync() {
         if (adminCount === 0) {
           await seedDefaultAdmin(email, name);
           const snapshot = await exportDbToJson();
-          await uploadStoreFile(accessToken, snapshot);
+          await uploadStoreFile(token, snapshot);
         }
         markSynced();
       } catch (err) {
@@ -44,7 +59,7 @@ export function useSync() {
         setStatus('error');
       }
     },
-    [accessToken, setStatus, markSynced]
+    [setStatus, markSynced]
   );
 
   const pushToDrive = useCallback(async () => {
