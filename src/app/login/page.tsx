@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, Store, Loader2 } from 'lucide-react';
+import { LogIn, Store, Loader2, Zap, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 import { signInWithGoogle, fetchGoogleProfile } from '@/lib/google-auth';
 import { useAuthStore } from '@/lib/store';
 import { db } from '@/lib/db';
@@ -59,35 +59,79 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-8 flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white">
-            <Store size={24} />
-          </div>
-          <h1 className="text-xl font-semibold text-slate-900">SaaS Venda</h1>
-          <p className="text-sm text-slate-500">
-            Gestão de vendas e estoque local-first, sincronizada com o seu Google Drive.
+    <main className="relative min-h-screen overflow-hidden text-slate-100">
+      {/* background texture + glow orbs */}
+      <div className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
+      <div className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-violet-600/30 blur-[120px]" />
+      <div className="pointer-events-none absolute right-0 top-40 h-[380px] w-[380px] rounded-full bg-indigo-500/30 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-[320px] w-[320px] rounded-full bg-cyan-400/10 blur-[100px]" />
+
+      <div className="relative mx-auto grid min-h-screen max-w-6xl grid-cols-1 items-center gap-12 px-6 py-16 lg:grid-cols-2">
+        {/* Left: hero */}
+        <div className="fade-in">
+          <span className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-violet-300">
+            <Zap size={12} /> Novo — licença única, sem mensalidade
+          </span>
+          <h1 className="mt-5 text-3xl font-extrabold leading-tight sm:text-4xl">
+            Controle sua loja com um{' '}
+            <span className="grad-text">PDV moderno</span> que roda no seu navegador
+          </h1>
+          <p className="mt-4 max-w-md text-sm text-slate-400">
+            Vendas, estoque e sincronização com o seu Google Drive, sem servidor, sem
+            assinatura. Seus dados são só seus.
           </p>
+
+          <div className="mt-8 grid max-w-lg gap-3 sm:grid-cols-3">
+            <div className="glass rounded-xl p-3">
+              <Zap className="h-4 w-4 text-amber-300" />
+              <p className="mt-1.5 text-xs font-semibold">Instantâneo</p>
+              <p className="text-[11px] text-slate-400">Sem espera de rede</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <ShieldCheck className="h-4 w-4 text-emerald-300" />
+              <p className="mt-1.5 text-xs font-semibold">Seus dados</p>
+              <p className="text-[11px] text-slate-400">Ficam no seu Drive</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <ImageIcon className="h-4 w-4 text-sky-300" />
+              <p className="mt-1.5 text-xs font-semibold">Fotos por item</p>
+              <p className="text-[11px] text-slate-400">Catálogo visual</p>
+            </div>
+          </div>
         </div>
 
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
-        >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
-          {loading ? 'Entrando...' : 'Entrar com Google'}
-        </button>
+        {/* Right: login card */}
+        <div className="glass glow fade-in rounded-3xl p-7">
+          <div className="mb-6 flex flex-col items-center gap-1 text-center">
+            <div className="grad-btn mb-2 flex h-14 w-14 items-center justify-center rounded-2xl">
+              <Store className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="text-lg font-bold">Entrar no painel</h2>
+            <p className="text-xs text-slate-400">
+              Gestão de vendas e estoque local-first, sincronizada com o seu Google Drive.
+            </p>
+          </div>
 
-        {error && (
-          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>
-        )}
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="grad-btn flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/40 transition disabled:opacity-60"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
+            {loading ? 'Entrando...' : 'Entrar com Google'}
+          </button>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
-          Seus dados ficam no seu navegador e na pasta privada do seu Google Drive.
-          Nenhum arquivo pessoal é acessado.
-        </p>
+          {error && (
+            <p className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {error}
+            </p>
+          )}
+
+          <p className="mt-5 text-center text-[11px] text-slate-500">
+            O login real usa Google OAuth com escopo restrito (drive.appdata). Nenhum
+            arquivo pessoal é acessado.
+          </p>
+        </div>
       </div>
     </main>
   );
