@@ -22,7 +22,14 @@ export function useSync() {
         const remote = await downloadStoreFile(accessToken);
         if (remote) {
           await importDbFromJson(remote);
-        } else {
+        }
+        // Sem arquivo remoto (primeiro acesso) OU arquivo remoto existente
+        // mas sem nenhum usuário cadastrado (ex.: arquivo órfão de uma
+        // sincronização anterior incompleta) — em ambos os casos, este é
+        // efetivamente o primeiro uso da loja: recria o admin e sobe um
+        // snapshot novo para o Drive.
+        const userCount = await db.users.count();
+        if (userCount === 0) {
           await seedDefaultAdmin(email, name);
           const snapshot = await exportDbToJson();
           await uploadStoreFile(accessToken, snapshot);
