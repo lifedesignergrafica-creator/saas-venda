@@ -29,16 +29,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const items = NAV.filter((n) => currentUser && n.roles.includes(currentUser.role));
+  const initials = (currentUser?.name ?? '')
+    .split(' ')
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 font-semibold text-slate-900">
-            <Store size={20} />
+    <div className="relative min-h-screen text-slate-100">
+      <div className="dot-grid pointer-events-none fixed inset-0 opacity-40" />
+      <div className="relative flex">
+        {/* Sidebar */}
+        <aside className="glass sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-white/10 md:flex">
+          <div className="flex items-center gap-2 px-5 py-5 font-extrabold">
+            <div className="grad-btn flex h-9 w-9 items-center justify-center rounded-xl">
+              <Store className="h-5 w-5 text-white" />
+            </div>
             SaaS Venda
           </div>
-          <nav className="hidden items-center gap-1 sm:flex">
+          <nav className="flex-1 space-y-1 px-3 py-2">
             {items.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
@@ -46,52 +56,83 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     active
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'grad-btn text-white shadow-lg shadow-violet-900/30'
+                      : 'text-slate-300 hover:bg-white/5'
                   }`}
                 >
-                  <Icon size={15} />
+                  <Icon size={16} />
                   {item.label}
                 </Link>
               );
             })}
           </nav>
-          <div className="flex items-center gap-3">
-            <SyncIndicator />
-            <span className="hidden text-sm text-slate-500 sm:inline">
-              {currentUser?.name}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-              title="Sair"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
-        </div>
-        <nav className="flex items-center gap-1 overflow-x-auto border-t border-slate-100 px-4 py-2 sm:hidden">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  active ? 'bg-slate-900 text-white' : 'text-slate-600'
-                }`}
+          <div className="border-t border-white/10 p-3">
+            <div className="glass flex items-center gap-2.5 rounded-xl px-3 py-2.5">
+              <div className="grad-btn flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold">{currentUser?.name}</p>
+                <p className="text-[10px] text-slate-400">
+                  {currentUser?.role === 'ADMIN' ? 'Administrador' : 'Atendente'}
+                </p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
+                title="Sair"
               >
-                <Icon size={15} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </header>
-      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main */}
+        <div className="min-w-0 flex-1">
+          <header className="glass sticky top-0 z-10 border-b border-white/10">
+            <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+              <div className="flex items-center gap-2 font-extrabold md:hidden">
+                <div className="grad-btn flex h-8 w-8 items-center justify-center rounded-lg">
+                  <Store className="h-4 w-4 text-white" />
+                </div>
+                SaaS Venda
+              </div>
+              <div className="flex items-center gap-3">
+                <SyncIndicator />
+                <button
+                  onClick={handleLogout}
+                  className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white md:hidden"
+                  title="Sair"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            </div>
+            <nav className="flex items-center gap-1 overflow-x-auto border-t border-white/10 px-4 py-2 md:hidden">
+              {items.map((item) => {
+                const Icon = item.icon;
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${
+                      active ? 'grad-btn text-white' : 'text-slate-300'
+                    }`}
+                  >
+                    <Icon size={15} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </header>
+          <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">{children}</main>
+        </div>
+      </div>
     </div>
   );
 }
