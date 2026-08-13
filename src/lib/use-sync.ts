@@ -24,12 +24,16 @@ export function useSync() {
           await importDbFromJson(remote);
         }
         // Sem arquivo remoto (primeiro acesso) OU arquivo remoto existente
-        // mas sem nenhum usuário cadastrado (ex.: arquivo órfão de uma
-        // sincronização anterior incompleta) — em ambos os casos, este é
-        // efetivamente o primeiro uso da loja: recria o admin e sobe um
-        // snapshot novo para o Drive.
-        const userCount = await db.users.count();
-        if (userCount === 0) {
+        // mas sem NENHUM usuário com papel ADMIN (ex.: arquivo órfão de uma
+        // sincronização anterior incompleta/de teste, com dados parciais ou
+        // com um usuário cadastrado sob outro e-mail) — em todos esses
+        // casos a loja ainda não tem um dono de fato: recria o admin com
+        // quem está logando agora e sobe um snapshot novo para o Drive.
+        // Uma loja que JÁ tem um admin legítimo continua exigindo que
+        // novos e-mails sejam cadastrados por esse admin (comportamento
+        // de segurança original, preservado).
+        const adminCount = await db.users.where('role').equals('ADMIN').count();
+        if (adminCount === 0) {
           await seedDefaultAdmin(email, name);
           const snapshot = await exportDbToJson();
           await uploadStoreFile(accessToken, snapshot);
