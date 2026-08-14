@@ -17,7 +17,7 @@ import { checkProductLimit } from '@/lib/plan-limits';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { storeSlug, id, name, imageUrl, price, stockQuantity, minStockAlert, active } = body;
+    const { storeSlug, id, name, imageUrl, price, stockQuantity, minStockAlert, active, category } = body;
 
     if (!storeSlug || !id || !name) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 });
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       stock_quantity: stockQuantity,
       min_stock_alert: minStockAlert,
       active: active ?? true,
+      category: category || null,
       updated_at: new Date().toISOString(),
     });
     if (upsertError) throw upsertError;
