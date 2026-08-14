@@ -7,7 +7,8 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { AppShell } from '@/components/AppShell';
 import { db } from '@/lib/db';
 import { useSync } from '@/lib/use-sync';
-import { Product } from '@/lib/types';
+import { Product, WholesaleMode } from '@/lib/types';
+import { DEFAULT_WHOLESALE_MIN_QTY } from '@/lib/pricing';
 import { syncProductToOnlineStore, removeProductFromOnlineStore } from '@/lib/online-store-sync';
 
 type FormState = {
@@ -17,6 +18,10 @@ type FormState = {
   price: string;
   stockQuantity: string;
   minStockAlert: string;
+  wholesaleEnabled: boolean;
+  wholesaleMinQty: string;
+  wholesaleMode: WholesaleMode;
+  wholesaleValue: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -25,6 +30,10 @@ const EMPTY_FORM: FormState = {
   price: '',
   stockQuantity: '',
   minStockAlert: '5',
+  wholesaleEnabled: false,
+  wholesaleMinQty: String(DEFAULT_WHOLESALE_MIN_QTY),
+  wholesaleMode: 'VALUE',
+  wholesaleValue: '',
 };
 
 function ProductModal({
@@ -62,6 +71,10 @@ function ProductModal({
       minStockAlert: parseInt(form.minStockAlert, 10) || 5,
       createdAt: form.id ? (await db.products.get(form.id))?.createdAt ?? now : now,
       updatedAt: now,
+      wholesaleEnabled: form.wholesaleEnabled,
+      wholesaleMinQty: parseInt(form.wholesaleMinQty, 10) || DEFAULT_WHOLESALE_MIN_QTY,
+      wholesaleMode: form.wholesaleMode,
+      wholesaleValue: form.wholesaleValue ? parseFloat(form.wholesaleValue) : undefined,
     };
 
     if (form.id) {
@@ -109,7 +122,7 @@ function ProductModal({
               accept="image/*"
               onChange={handleFile}
               className="mt-1 text-xs text-slate-400"
-            />
+          />
             <input
               value={form.imageUrl}
               onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
@@ -161,6 +174,84 @@ function ProductModal({
             />
             Exibir este produto na loja online (link de venda)
           </label>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+              <input
+                type="checkbox"
+                checked={form.wholesaleEnabled}
+                onChange={(e) => setForm((f) => ({ ...f, wholesaleEnabled: e.target.checked }))}
+              />
+              Ativar preço de atacado
+            </label>
+
+            {form.wholesaleEnabled && (
+              <div className="mt-3 space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-400">
+                    A partir de quantas unidades
+                  </label>
+                  <input
+                    type="number"
+                    min="2"
+                    value={form.wholesaleMinQty}
+                    onChange={(e) => setForm((f) => ({ ...f, wholesaleMinQty: e.target.value }))}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-violet-400/60"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-400">
+                    Como o valor de atacado é lançado
+                  </label>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, wholesaleMode: 'VALUE' }))}
+                      className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
+                        form.wholesaleMode === 'VALUE'
+                          ? 'grad-btn border-transparent text-white'
+                          : 'border-white/10 text-slate-300 hover:bg-white/5'
+                      }`}
+                    >
+                      Valor fixo (R$)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, wholesaleMode: 'PERCENTAGE' }))}
+                      className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
+                        form.wholesaleMode === 'PERCENTAGE'
+                          ? 'grad-btn border-transparent text-white'
+                          : 'border-white/10 text-slate-300 hover:bg-white/5'
+                      }`}
+                    >
+                      Desconto (%)
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-400">
+                    {form.wholesaleMode === 'PERCENTAGE'
+                      ? 'Percentual de desconto sobre o preço normal'
+                      : 'Preço por unidade no atacado (R$)'}
+                  </label>
+                  <input
+                    required={form.wholesaleEnabled}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max={form.wholesaleMode === 'PERCENTAGE' ? 100 : undefined}
+                    value={form.wholesaleValue}
+                    onChange={(e) => setForm((f) => ({ ...f, wholesaleValue: e.target.value }))}
+                    placeholder={form.wholesaleMode === 'PERCENTAGE' ? 'ex: 15' : 'ex: 39.90'}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-violet-400/60"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             type="submit"
             disabled={saving}
@@ -192,6 +283,10 @@ function InventoryContent() {
       price: String(p.price),
       stockQuantity: String(p.stockQuantity),
       minStockAlert: String(p.minStockAlert),
+      wholesaleEnabled: !!p.wholesaleEnabled,
+      wholesaleMinQty: String(p.wholesaleMinQty ?? DEFAULT_WHOLESALE_MIN_QTY),
+      wholesaleMode: p.wholesaleMode ?? 'VALUE',
+      wholesaleValue: p.wholesaleValue != null ? String(p.wholesaleValue) : '',
     });
   }
 
@@ -256,7 +351,14 @@ function InventoryContent() {
                     )}
                     <span className="font-medium text-slate-200">{p.name}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-slate-300">R$ {p.price.toFixed(2)}</td>
+                  <td className="px-4 py-2.5 text-slate-300">
+                    R$ {p.price.toFixed(2)}
+                    {p.wholesaleEnabled && p.wholesaleValue != null && (
+                      <span className="ml-1.5 rounded-full bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-medium text-violet-300">
+                        atacado {p.wholesaleMinQty ?? DEFAULT_WHOLESALE_MIN_QTY}+
+                      </span>
+                    )}
+                  </td>
                   <td className={`px-4 py-2.5 ${low ? 'font-semibold text-red-300' : 'text-slate-300'}`}>
                     {p.stockQuantity}
                   </td>
