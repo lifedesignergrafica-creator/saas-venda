@@ -19,6 +19,7 @@ export interface ProductRow {
   stock_quantity: number;
   min_stock_alert: number;
   active: boolean;
+  category: string | null;
 }
 
 export interface CustomerRow {
