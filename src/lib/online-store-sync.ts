@@ -37,6 +37,7 @@ export async function syncProductToOnlineStore(product: Product, active = true) 
         stockQuantity: product.stockQuantity,
         minStockAlert: product.minStockAlert,
         active,
+        category: product.category || null,
       }),
     });
     if (!res.ok) {
