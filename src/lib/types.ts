@@ -9,6 +9,8 @@ export interface User {
   createdAt: Date;
 }
 
+export type WholesaleMode = 'VALUE' | 'PERCENTAGE';
+
 export interface Product {
   id: string;
   name: string;
@@ -18,6 +20,15 @@ export interface Product {
   minStockAlert: number;
   createdAt: Date;
   updatedAt: Date;
+  // Preço de atacado: a partir de `wholesaleMinQty` unidades do MESMO
+  // produto no carrinho, o preço unitário passa a usar a regra de atacado
+  // em vez do preço normal (varejo). `wholesaleMode` decide como o valor de
+  // atacado é lançado: 'VALUE' = preço fixo por unidade, 'PERCENTAGE' =
+  // percentual de desconto aplicado sobre `price`.
+  wholesaleEnabled?: boolean;
+  wholesaleMinQty?: number;
+  wholesaleMode?: WholesaleMode;
+  wholesaleValue?: number;
 }
 
 export interface SaleItem {
