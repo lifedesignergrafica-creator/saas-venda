@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { PaymentMethod, Product, SyncStatus, User } from './types';
+import { getUnitPrice } from './pricing';
 
 interface CartItem {
   product: Product;
@@ -45,7 +46,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     })),
   setPaymentMethod: (method) => set({ paymentMethod: method }),
   clear: () => set({ items: [] }),
-  total: () => get().items.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
+  total: () =>
+    get().items.reduce((sum, i) => sum + getUnitPrice(i.product, i.quantity) * i.quantity, 0),
 }));
 
 interface AuthState {
