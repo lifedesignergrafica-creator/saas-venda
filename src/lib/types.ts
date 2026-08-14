@@ -29,6 +29,9 @@ export interface Product {
   wholesaleMinQty?: number;
   wholesaleMode?: WholesaleMode;
   wholesaleValue?: number;
+  // Categoria livre do produto (ex.: "Bolos", "Doces", "Bebidas"), usada para
+  // agrupar/filtrar no estoque e na loja online.
+  category?: string;
 }
 
 export interface SaleItem {
