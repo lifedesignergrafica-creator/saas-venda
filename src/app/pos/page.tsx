@@ -9,6 +9,7 @@ import { db } from '@/lib/db';
 import { useCartStore, useAuthStore } from '@/lib/store';
 import { useSync } from '@/lib/use-sync';
 import { PaymentMethod, Product } from '@/lib/types';
+import { DEFAULT_WHOLESALE_MIN_QTY, getUnitPrice, isWholesaleActive } from '@/lib/pricing';
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   PIX: 'PIX',
@@ -71,13 +72,16 @@ function PosContent() {
           totalAmount: total(),
           paymentMethod,
           createdAt: new Date(),
-          items: items.map((i) => ({
-            productId: i.product.id,
-            productName: i.product.name,
-            quantity: i.quantity,
-            unitPrice: i.product.price,
-            totalPrice: i.product.price * i.quantity,
-          })),
+          items: items.map((i) => {
+            const unitPrice = getUnitPrice(i.product, i.quantity);
+            return {
+              productId: i.product.id,
+              productName: i.product.name,
+              quantity: i.quantity,
+              unitPrice,
+              totalPrice: unitPrice * i.quantity,
+            };
+          }),
         });
       });
       clear();
@@ -153,6 +157,15 @@ function PosContent() {
                     </span>
                     <span className="text-xs text-slate-500">{product.stockQuantity} un.</span>
                   </div>
+                  {product.wholesaleEnabled && product.wholesaleValue != null && (
+                    <p className="mt-0.5 text-[10px] text-violet-300">
+                      Atacado a partir de {product.wholesaleMinQty ?? DEFAULT_WHOLESALE_MIN_QTY}{' '}
+                      un.:{' '}
+                      {product.wholesaleMode === 'PERCENTAGE'
+                        ? `-${product.wholesaleValue}%`
+                        : `R$ ${product.wholesaleValue.toFixed(2)}`}
+                    </p>
+                  )}
                 </div>
               </button>
             );
@@ -184,7 +197,10 @@ function PosContent() {
                   {item.product.name}
                 </p>
                 <p className="text-xs text-slate-500">
-                  R$ {item.product.price.toFixed(2)} un.
+                  R$ {getUnitPrice(item.product, item.quantity).toFixed(2)} un.
+                  {isWholesaleActive(item.product, item.quantity) && (
+                    <span className="ml-1 text-violet-300">(atacado)</span>
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-1">
