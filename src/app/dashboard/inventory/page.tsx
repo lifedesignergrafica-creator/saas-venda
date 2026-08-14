@@ -14,6 +14,7 @@ import { syncProductToOnlineStore, removeProductFromOnlineStore } from '@/lib/on
 type FormState = {
   id?: string;
   name: string;
+  category: string;
   imageUrl: string;
   price: string;
   stockQuantity: string;
@@ -26,6 +27,7 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   name: '',
+  category: '',
   imageUrl: '',
   price: '',
   stockQuantity: '',
@@ -38,10 +40,12 @@ const EMPTY_FORM: FormState = {
 
 function ProductModal({
   initial,
+  categories,
   onClose,
   onSaved,
 }: {
   initial: FormState;
+  categories: string[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -65,6 +69,7 @@ function ProductModal({
     const product: Product = {
       id: form.id ?? crypto.randomUUID(),
       name: form.name,
+      category: form.category.trim() || undefined,
       imageUrl: form.imageUrl,
       price: parseFloat(form.price) || 0,
       stockQuantity: parseInt(form.stockQuantity, 10) || 0,
@@ -114,6 +119,21 @@ function ProductModal({
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-violet-400/60"
             />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-400">Categoria</label>
+            <input
+              list="categorias-existentes"
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              placeholder="ex: Bolos, Doces, Bebidas..."
+              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-violet-400/60"
+            />
+            <datalist id="categorias-existentes">
+              {categories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </div>
           <div>
             <label className="text-xs font-medium text-slate-400">Imagem (upload ou URL)</label>
@@ -269,16 +289,22 @@ function InventoryContent() {
   const products = useLiveQuery(() => db.products.toArray(), []) ?? [];
   const [editing, setEditing] = useState<FormState | null>(null);
   const [onlyLow, setOnlyLow] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('');
   const { pushToDrive } = useSync();
 
-  const visible = onlyLow
-    ? products.filter((p) => p.stockQuantity <= p.minStockAlert)
-    : products;
+  const categories = Array.from(
+    new Set(products.map((p) => p.category?.trim()).filter((c): c is string => !!c))
+  ).sort((a, b) => a.localeCompare(b));
+
+  const visible = products
+    .filter((p) => !onlyLow || p.stockQuantity <= p.minStockAlert)
+    .filter((p) => !categoryFilter || p.category === categoryFilter);
 
   function openEdit(p: Product) {
     setEditing({
       id: p.id,
       name: p.name,
+      category: p.category ?? '',
       imageUrl: p.imageUrl,
       price: String(p.price),
       stockQuantity: String(p.stockQuantity),
@@ -301,7 +327,21 @@ function InventoryContent() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg font-semibold text-slate-100">Estoque</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {categories.length > 0 && (
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-slate-300 outline-none focus:border-violet-400/60"
+            >
+              <option value="">Todas as categorias</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          )}
           <label className="flex items-center gap-1.5 text-xs text-slate-400">
             <input
               type="checkbox"
@@ -319,11 +359,12 @@ function InventoryContent() {
         </div>
       </div>
 
-      <div className="glass overflow-x-auto rounded-xl">
+      <div className="gloss overflow-x-auto rounded-xl">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/10 text-left text-xs text-slate-400">
               <th className="px-4 py-2">Produto</th>
+              <th className="px-4 py-2">Categoria</th>
               <th className="px-4 py-2">Preço</th>
               <th className="px-4 py-2">Estoque</th>
               <th className="px-4 py-2">Alerta</th>
@@ -350,6 +391,13 @@ function InventoryContent() {
                       <div className="h-8 w-8 rounded bg-white/5" />
                     )}
                     <span className="font-medium text-slate-200">{p.name}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-slate-400">
+                    {p.category ? (
+                      <span className="rounded-full bg-white/5 px-2 py-0.5 text-xs">{p.category}</span>
+                    ) : (
+                      <span className="text-slate-600">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-2.5 text-slate-300">
                     R$ {p.price.toFixed(2)}
@@ -382,7 +430,7 @@ function InventoryContent() {
             })}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   Nenhum produto encontrado.
                 </td>
               </tr>
@@ -394,6 +442,7 @@ function InventoryContent() {
       {editing && (
         <ProductModal
           initial={editing}
+          categories={categories}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
